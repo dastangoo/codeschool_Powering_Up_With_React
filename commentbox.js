@@ -5,11 +5,18 @@ class CommentBox extends React.Component {
     this.state = {
       showComments: false,
       // comments is now part of the state
-      comments: [
-        { id: 1, author: "Morgan McCircuit", body: "Great picture!" },
-        { id: 2, author: "Bending Bender", body: "Excellent stuff"}
-      ];
+      
+      // Hard-coded data
+      // comments: [
+      //   { id: 1, author: "Morgan McCircuit", body: "Great picture!" },
+      //   { id: 2, author: "Bending Bender", body: "Excellent stuff"}
+      // ];
+      comments: []; /* Initialized to an empty array */
     }
+  }
+  
+  componentWillMount() {
+    _fetchComments(); /* Fetch comments from server before component is rendered */
   }
   render() {
     const comments = this._getComments();
@@ -26,6 +33,15 @@ class CommentBox extends React.Component {
     );
   }
   
+  componentDidMount() {
+    // Polling the server every five secodns
+    // Store time as object property
+    this._timer = setInterval(() => this._fetchComments(), 5000);
+  }
+  
+  componenWillUnmount(){
+    clearInterval(this._timer);
+  }
   _getComments(){
     // const commentList [
     //   { id: 1, author: "Morgan McCircuit", body: "Great picture!" },
@@ -59,5 +75,17 @@ class CommentBox extends React.Component {
       // Updates state when function is called by adding new comment
       this.setState({ comments: this.state.comments.concat([comment])}) /* New array references help React stary fast. So concat works better than push here */
       
+  }
+  
+  // We can't call _fetchComments from render - we'll get an infinite loop
+  // _fetchComments calls setState, which calls render
+  _fetchComments() {
+    jQuery.ajax({
+      method: 'GET',
+      url: '/api/comments/', /* Makes call to the remote server */
+      success: (comments) => { /* Arrow function preserves the this binding to our classs */
+        this.setState({ comments })
+      }
+    });
   }
 }
